@@ -1,1 +1,1 @@
-__all__ = ["coin_flip", "tiger"]
+__all__ = ["coin_flip", "tiger","RPS"]
