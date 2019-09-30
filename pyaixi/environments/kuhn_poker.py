@@ -73,8 +73,11 @@ class KuhnPoker(environment.Environment):
         # initialize the observation and reward with blinds
         # the length of observation is five: the last action of the opponent , the value of the pot,
         # the card hold by the agent, the card hold by the opponent, whether the play showdown or go_on
-        self.observation = [random.sample([oPass,oBet]), pot2, random.sample([K,Q,J]), unknown, go_on]
+        self.observation = [random.sample([oPass,oBet]), pot2, random.sample([K,Q,J])]
         self.reward = lose1
+
+        self.probability = 0.5
+        self.bet_probability = 0.5
 
     def opponent_action(self, action):
 
@@ -85,11 +88,11 @@ class KuhnPoker(environment.Environment):
         """
 
         assert self.is_valid_action(action)
-        assert (self.observation[3]==unknown and self.observation[4]==go_on) \
-               or (self.observation[3] == K and self.observation[4] == showdown) \
-               or (self.observation[3] == Q and self.observation[4] == showdown) \
-               or (self.observation[3] == J and self.observation[4] == showdown)
-        assert self.observation[2] != self.observation[3]
+        # assert (self.observation[3]==unknown and self.observation[4]==go_on) \
+        #        or (self.observation[3] == K and self.observation[4] == showdown) \
+        #        or (self.observation[3] == Q and self.observation[4] == showdown) \
+        #        or (self.observation[3] == J and self.observation[4] == showdown)
+        # assert self.observation[2] != self.observation[3]
 
         # Save the action.
         self.action = action
@@ -100,14 +103,17 @@ class KuhnPoker(environment.Environment):
                 if self.observation[2]==K:
                     self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward = 0.5 * (win1 + lose1)
+                    self.reward = self.probability * win1 + (1-self.probability) * lose1
                 else:
                     self.reward = lose1
             else:
                 if self.observation[2]==K:
                     self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward = 0.5 * (win2 + lose2)
+                    self.reward = self.bet_probability * (self.probability * win2 + (1-self.probability) * lose2) \
+                                  + (1-self.bet_probability) * win1
+                else:
+                    self.reward = self.bet_probability * lose2 + (1-self.bet_probability) * win1
                 
         else:
             # self.observation[1] = pot3
@@ -115,7 +121,7 @@ class KuhnPoker(environment.Environment):
                 if self.observation[2]==K:
                     self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward = 0.5 * (win2 + lose2)
+                    self.reward = self.probability * win2 + (1-self.probability) * lose2
                 else:
                     self.reward = lose2
             else:
