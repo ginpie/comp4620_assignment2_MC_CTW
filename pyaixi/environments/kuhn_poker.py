@@ -79,9 +79,6 @@ class KuhnPoker(environment.Environment):
         self.probability = 0.5
         self.bet_probability = 0.5
 
-    def opponent_action(self, action):
-
-
 
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
