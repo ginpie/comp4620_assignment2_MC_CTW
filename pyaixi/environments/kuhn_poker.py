@@ -70,6 +70,10 @@ class KuhnPoker(environment.Environment):
                     # self.reward += 0
             elif self.action == aBet:
                 self.reward -= rChip
+                if self.observation[2]==K:
+                    self.reward += pot
+                elif self.observation[2]==Q:
+                    self.reward += default_probability*pot
                 
         else:
             pot += rChip
