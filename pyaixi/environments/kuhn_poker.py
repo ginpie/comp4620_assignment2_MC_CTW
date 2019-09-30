@@ -18,47 +18,78 @@ kuhn_action_enum = util.enum('aPass', 'aBet')
 
 # define observations: the opponent passes or bets, the pot, the card holded by the agent
 # and the card hold by the opponent when showdown
-kuhn_observation_enum = util.enum('oPass', 'oBet', 'pot', 'showdown', 'oK', 'oQ', 'oJ','aK', 'aQ', 'aJ',)
+kuhn_observation_enum = util.enum('oPass', 'oBet', 'pot2', 'pot3', 'pot4',
+                                  'showdown', 'go_on',
+                                  'K', 'Q', 'J', 'unknown')
+                                  # 'oK', 'oQ', 'oJ', 'aK', 'aQ', 'aJ',)
 
-# define rewards: lose one chip when the game is initialized or the agent bets,
-# when the agent wins or loses, the reward is positive or negative value of pot 
-kuhn_reward_enum = util.enum(-2, -1, 1, 2)
+# define rewards: lose one chip when the agent put one chip and lose(lose1),
+# lose two chips when the agent bets and lose(lose2),
+# win one(win1) or two(win2) chips when the opponent puts one or two chips and the agent wins
+kuhn_reward_enum = util.enum('lose2', 'lose1', 'win1', 'win2')
 # kuhn_reward_enum = util.enum(-2, -1, 2, 3, 4)
+
+# similarly define the opponent
+# kuhn_action_enum = util.enum('oPass', 'oBet')
+# kuhn_op_observation_emum = util.enum('no','aPass', 'aBet', 'pot2', 'pot3', 'pot4',
+#                                   'showdown', 'go_on',
+#                                   'K', 'Q', 'J', 'unknown')
+# kuhn_reward_enum = util.enum('lose2', 'lose1', 'win1', 'win2')
+
 
 aPass = kuhn_action_enum.aPass
 aBet = kuhn_action_enum.aBet
 
 oPass = kuhn_observation_enum.oPass
 oBet = kuhn_observation_enum.oBet
-pot = kuhn_observation_enum.pot
-oK = kuhn_observation_enum.oK
-oQ = kuhn_observation_enum.oQ
-oJ = kuhn_observation_enum.oJ
-aK = kuhn_observation_enum.aK
-aQ = kuhn_observation_enum.aQ
-aJ = kuhn_observation_enum.aJ
 
-rChip = kuhn_reward_enum.rChip
+pot2 = kuhn_observation_enum.pot2
+pot3 = kuhn_observation_enum.pot3
+pot4 = kuhn_observation_enum.pot4
+
+showdown = kuhn_observation_enum.showdown
+go_on = kuhn_observation_enum.go_on
+
+K = kuhn_observation_enum.K
+Q = kuhn_observation_enum.Q
+J = kuhn_observation_enum.J
+unknown = kuhn_observation_enum.unknown
+
+lose2 = kuhn_reward_enum.lose2
+lose1 = kuhn_reward_enum.lose1
+win1 = kuhn_reward_enum.win1
+win2 = kuhn_reward_enum.win2
+
 
 class KuhnPoker(environment.Environment):
-    default_probability = 0.5
-    
+
     def __init__(self, options={}):
         environment.Environment.__init__(self.options = options)
-        
+
         self.valid_actions = list(kuhn_action_enum.keys())
         self.valid_obeservations = list(kuhn_observation_enum.keys())
         self.valid_rewards = list(kuhn_reward_enum.keys())
         
         # initialize the observation and reward with blinds
-        self.observation = [random.sample([oPass,oBet]), pot=2*rChip, random.sample([K,Q,J])]
-        self.reward = -rChip
-        
+        # the length of observation is five: the last action of the opponent , the value of the pot,
+        # the card hold by the agent, the card hold by the opponent, whether the play showdown or go_on
+        self.observation = [random.sample([oPass,oBet]), pot2, random.sample([K,Q,J]), unknown, go_on]
+        self.reward = lose1
+
+    def opponent_action(self, action):
+
+
+
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
 
         assert self.is_valid_action(action)
+        assert (self.observation[3]==unknown and self.observation[4]==go_on) \
+               or (self.observation[3] == K and self.observation[4] == showdown) \
+               or (self.observation[3] == Q and self.observation[4] == showdown) \
+               or (self.observation[3] == J and self.observation[4] == showdown)
+        assert self.observation[2] != self.observation[3]
 
         # Save the action.
         self.action = action
@@ -67,37 +98,30 @@ class KuhnPoker(environment.Environment):
         if oPass in self.observation[0]:
             if self.action == aPass:
                 if self.observation[2]==K:
-                    self.reward += pot
+                    self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward += default_probability*pot
-                # else:
-                    # self.reward += 0
-            elif self.action == aBet:
-                self.reward -= rChip
+                    self.reward = 0.5 * (win1 + lose1)
+                else:
+                    self.reward = lose1
+            else:
                 if self.observation[2]==K:
-                    self.reward += pot
+                    self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward += default_probability*pot
+                    self.reward = 0.5 * (win2 + lose2)
                 
         else:
-            pot += rChip
-             if self.action == aBet:
-                self.reward = -rChip
-                pot += rChip
+            # self.observation[1] = pot3
+            if self.action == aBet:
                 if self.observation[2]==K:
-                    self.reward += pot
+                    self.reward = win2
                 elif self.observation[2]==Q:
-                    self.reward += default_probability*pot
-                # else:
-                    # self.reward += 0
-            # elif self.action == aPass:
-                # self.reward += 0           
+                    self.reward = 0.5 * (win2 + lose2)
+                else:
+                    self.reward = lose2
+            else:
+                self.reward = lose1
 
-        # Store the observation and reward in the environment.
-        self.observation = observation
-        self.reward = reward
-
-        return (observation, reward)
+        return (self.observation, self.reward)
     # end def
 
     def print(self):
