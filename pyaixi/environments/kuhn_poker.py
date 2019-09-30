@@ -18,11 +18,12 @@ kuhn_action_enum = util.enum('aPass', 'aBet')
 
 # define observations: the opponent passes or bets, the pot, the card holded by the agent
 # and the card hold by the opponent when showdown
-kuhn_observation_enum = util.enum('oPass', 'oBet', 'pot', 'K', 'Q', 'J')
+kuhn_observation_enum = util.enum('oPass', 'oBet', 'pot', 'showdown', 'oK', 'oQ', 'oJ','aK', 'aQ', 'aJ',)
 
 # define rewards: lose one chip when the game is initialized or the agent bets,
 # when the agent wins or loses, the reward is positive or negative value of pot 
-kuhn_reward_enum = util.enum('rChip', 'pot')
+kuhn_reward_enum = util.enum(-2, -1, 1, 2)
+# kuhn_reward_enum = util.enum(-2, -1, 2, 3, 4)
 
 aPass = kuhn_action_enum.aPass
 aBet = kuhn_action_enum.aBet
@@ -30,9 +31,12 @@ aBet = kuhn_action_enum.aBet
 oPass = kuhn_observation_enum.oPass
 oBet = kuhn_observation_enum.oBet
 pot = kuhn_observation_enum.pot
-K = kuhn_observation_enum.K
-Q = kuhn_observation_enum.Q
-J = kuhn_observation_enum.J
+oK = kuhn_observation_enum.oK
+oQ = kuhn_observation_enum.oQ
+oJ = kuhn_observation_enum.oJ
+aK = kuhn_observation_enum.aK
+aQ = kuhn_observation_enum.aQ
+aJ = kuhn_observation_enum.aJ
 
 rChip = kuhn_reward_enum.rChip
 
