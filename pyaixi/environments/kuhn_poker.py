@@ -76,7 +76,9 @@ class KuhnPoker(environment.Environment):
         self.observation = [random.sample([oPass,oBet]), pot2, random.sample([K,Q,J])]
         self.reward = lose1
 
+        # initialize the probability of K hold be the opponent
         self.probability = 0.5
+        # initialize the probability of the opponent bet on the third round
         self.bet_probability = 0.5
 
 
@@ -113,7 +115,6 @@ class KuhnPoker(environment.Environment):
                     self.reward = self.bet_probability * lose2 + (1-self.bet_probability) * win1
                 
         else:
-            # self.observation[1] = pot3
             if self.action == aBet:
                 if self.observation[2]==K:
                     self.reward = win2
