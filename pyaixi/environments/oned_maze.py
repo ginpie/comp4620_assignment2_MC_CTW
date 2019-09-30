@@ -81,6 +81,7 @@ class OneDMaze(environment.Environment):
 
         # Set an initial percept.
         self.loc = random.choice(locs)
+
         self.observation = oNonGoal
         self.reward = 0
     # end def
