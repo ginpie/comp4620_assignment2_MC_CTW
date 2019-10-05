@@ -123,22 +123,28 @@ class CTWContextTreeNode:
            The log KT estimate of the conditional probability of observing a zero given
            we have observed `a` zeros and `b` ones at the current node is
 
-             log(Pr_kt(0 | 0^a 1^b)) = log((a + 1/2)/({a + b + 1))
+             log(Pr_kt(0 | 0^a 1^b)) = log((a + 1/2)/(a + b + 1))
 
            Similarly, the estimate of the conditional probability of observing a one is
 
-             log(\Pr_kt(1 |0^a 1^b)) = log((b + 1/2)/(a + b + 1))
+             log(Pr_kt(1 |0^a 1^b)) = log((b + 1/2)/(a + b + 1))
 
            - `symbol`: the symbol for which to calculate the log KT estimate of
              conditional probability.
-
              0 corresponds to calculating `log(Pr_kt(0 | 0^a 1^b)` and
              1 corresponds to calculating `log(Pr_kt(1 | 0^a 1^b)`.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
 
-        return None
+        a = self.symbol_count[0]
+        b = self.symbol_count[1]
+        if symbol == 0:
+            log_kt = math.log((a + 1 / 2) / (a + b + 1))
+        else:
+            log_kt = math.log((b + 1 / 2) / (a + b + 1))
+
+        return log_kt
     # end def
 
     def revert(self, symbol):
@@ -149,7 +155,17 @@ class CTWContextTreeNode:
             - `symbol`: the symbol used in the previous update.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        if self.symbol_count[symbol] >= 1:
+            self.symbol_count[symbol] -= 1
+
+        self.log_kt -= self.log_kt_multiplier(symbol)
+
+        if self.children.get(symbol):
+            del self.children[symbol]
+
+        self.update_log_probability()
     # end def
 
     def size(self):
@@ -167,7 +183,15 @@ class CTWContextTreeNode:
             - `symbol`: the symbol that was observed.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        self.symbol_count[symbol] += 1
+        # log[Pr_kt(a + 1, b)] = log[(a + 1 / 2) / (a + b + 1)] + log[Pr_kt(a, b)]
+        # log[Pr_kt(a, b + 1)] = log[(b + 1 / 2) / (a + b + 1)] + log[Pr_kt(a, b)]
+        self.log_kt = self.log_kt_multiplier(symbol)
+        self.update_log_probability()
+
+
     # end def
 
     def update_log_probability(self):
@@ -205,7 +229,21 @@ class CTWContextTreeNode:
             the argument of the exponent `exp(log(b) - log(a))` is as small as possible.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        pr = 0
+        # log(P^n_w) := log(Pr_kt(h_n)            (if n is a leaf node)
+        if self.is_leaf_node():
+            pr = self.log_kt
+        # log(P^n_w) := log(1/2 Pr_kt(h_n)) + 1/2 P^n0_w x P^n1_w)      (if n is NOT a leaf node)
+        else:
+            pn01 = 0
+            for child in self.children:
+                pn01 += child.log_probability
+            # log(P^n_w) := log(1/2) + log(Pr_kt(h_n)) + log(1 + exp( min[log(P^n0_w) + log(P^n1_w) - log(Pr_kt(h_n))] ) )
+            pr = math.log(1/2) + self.log_kt + math.log(1 + math.exp(- abs(pn01 - self.log_kt)))
+
+        self.log_probability = pr
     # end def
 
     def visits(self):
