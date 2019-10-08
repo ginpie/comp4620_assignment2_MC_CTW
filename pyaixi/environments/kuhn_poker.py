@@ -18,114 +18,164 @@ kuhn_action_enum = util.enum('aPass', 'aBet')
 
 # define observations: the opponent passes or bets, the pot, the card holded by the agent
 # and the card hold by the opponent when showdown
-kuhn_observation_enum = util.enum('oPass', 'oBet', 'pot2', 'pot3', 'pot4',
-                                  'showdown', 'go_on',
-                                  'K', 'Q', 'J', 'unknown')
-                                  # 'oK', 'oQ', 'oJ', 'aK', 'aQ', 'aJ',)
+kuhn_observation_action_enum = util.enum('oPass', 'oBet', 'pot')
+kuhn_observation_card_enum = util.enum('K', 'Q', 'J')
 
-# define rewards: lose one chip when the agent put one chip and lose(lose1),
-# lose two chips when the agent bets and lose(lose2),
-# win one(win1) or two(win2) chips when the opponent puts one or two chips and the agent wins
-kuhn_reward_enum = util.enum('lose2', 'lose1', 'win1', 'win2')
-# kuhn_reward_enum = util.enum(-2, -1, 2, 3, 4)
-
-# similarly define the opponent
-# kuhn_action_enum = util.enum('oPass', 'oBet')
-# kuhn_op_observation_emum = util.enum('no','aPass', 'aBet', 'pot2', 'pot3', 'pot4',
-#                                   'showdown', 'go_on',
-#                                   'K', 'Q', 'J', 'unknown')
-# kuhn_reward_enum = util.enum('lose2', 'lose1', 'win1', 'win2')
-
+# define rewards: lose one chip when the game is initialized or the agent bets,
+# when the agent wins or loses, the reward is positive or negative value of pot
+kuhn_reward_enum = util.enum('rChip')
+# kuhn_reward_enum = util.enum('rChip', 'pot')
 
 aPass = kuhn_action_enum.aPass
 aBet = kuhn_action_enum.aBet
 
-oPass = kuhn_observation_enum.oPass
-oBet = kuhn_observation_enum.oBet
+oPass = kuhn_observation_action_enum.oPass
+oBet = kuhn_observation_action_enum.oBet
+pot = kuhn_observation_action_enum.pot
+K = kuhn_observation_card_enum.K
+Q = kuhn_observation_card_enum.Q
+J = kuhn_observation_card_enum.J
 
-pot2 = kuhn_observation_enum.pot2
-pot3 = kuhn_observation_enum.pot3
-pot4 = kuhn_observation_enum.pot4
-
-showdown = kuhn_observation_enum.showdown
-go_on = kuhn_observation_enum.go_on
-
-K = kuhn_observation_enum.K
-Q = kuhn_observation_enum.Q
-J = kuhn_observation_enum.J
-unknown = kuhn_observation_enum.unknown
-
-lose2 = kuhn_reward_enum.lose2
-lose1 = kuhn_reward_enum.lose1
-win1 = kuhn_reward_enum.win1
-win2 = kuhn_reward_enum.win2
+rChip = kuhn_reward_enum.rChip
 
 
 class KuhnPoker(environment.Environment):
+    default_probability = 0.5
 
     def __init__(self, options={}):
-        environment.Environment.__init__(self.options = options)
+        environment.Environment.__init__(self, options=options)
 
         self.valid_actions = list(kuhn_action_enum.keys())
-        self.valid_obeservations = list(kuhn_observation_enum.keys())
+        self.valid_obeservations_action = list(kuhn_observation_action_enum.keys())
+        self.valid_obeservations_card = list(kuhn_observation_card_enum.keys())
+        # dealing. the first card is for the agent, and the second card is for the opponent
+        self.dealer = random.sample(self.valid_obeservations_card, 2)
         self.valid_rewards = list(kuhn_reward_enum.keys())
-        
-        # initialize the observation and reward with blinds
-        # the length of observation is five: the last action of the opponent , the value of the pot,
-        # the card hold by the agent, the card hold by the opponent, whether the play showdown or go_on
-        self.observation = [random.sample([oPass,oBet]), pot2, random.sample([K,Q,J])]
-        self.reward = lose1
+        self.action = random.sample([aPass, aBet])
+        self.oppo_action = random.sample([oPass, oBet])
+        # the agent gets the first card
+        self.card = self.dealer[0]
+        # now the agent can't see the card hold by the opponent. assigned when showtown
+        self.oppo_card = self.dealer[1]
+        self.showdown = False
+        # the next action the opponent might take. if it adopts Nash strategy, the second action of the opponent is
+        # always pass, but it will be assigned only in one condition: when the first action of the opponent is
+        # pass and the action of the agent is bet
+        self.next_step = None
 
-        # initialize the probability of K hold be the opponent
-        self.probability = 0.5
-        # initialize the probability of the opponent bet on the third round
-        self.bet_probability = 0.5
-
+        # initialize the observation and reward with blinds.
+        # [0:the agent's action, 1:the agent's card, 2:the opponent's action, 3:the opponent's card, 4:the next action
+        # of the opponent, 5:whether showdown]
+        self.observation = [self.action, self.card, self.oppo_action, None, self.next_step, self.showdown]
+        # self.observation = [self.action, self.pot, self.card, self.oppo_action, self.oppo_card, self.showdown]
+        self.reward = -rChip
+        # self.pot = 2 * rChip
 
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
 
         assert self.is_valid_action(action)
-        # assert (self.observation[3]==unknown and self.observation[4]==go_on) \
-        #        or (self.observation[3] == K and self.observation[4] == showdown) \
-        #        or (self.observation[3] == Q and self.observation[4] == showdown) \
-        #        or (self.observation[3] == J and self.observation[4] == showdown)
-        # assert self.observation[2] != self.observation[3]
+        # assert self.card != self.oppo_card
+        # assert self.shownown == True and self.oppo_card != None and self.oppo_action !=None
+        # assert self.shownown == False and self.oppo_card == None and self.oppo_action == None
 
-        # Save the action.
+        # define the strategy of the opponent
+        def oppo_action(self, oppo_card):
+            if oppo_card == K:
+                return 'oBet'
+            else:
+                return 'oPass'
+
+        # Save the action
         self.action = action
 
-		# different situations
-        if oPass in self.observation[0]:
+        # if the opponent pass
+        if self.oppo_action == oPass:
+            # if the agent pass
             if self.action == aPass:
-                if self.observation[2]==K:
-                    self.reward = win2
-                elif self.observation[2]==Q:
-                    self.reward = self.probability * win1 + (1-self.probability) * lose1
-                else:
-                    self.reward = lose1
+                # showndown and assign value to opponent action & card
+                self.showdown = True
+                self.observation[3] = self.oppo_card
+                # if hold K, win
+                if self.card == K:
+                    if self.oppo_card == Q:
+                        self.reward = rChip
+                    if self.oppo_card == J:
+                        self.reward = rChip
+                #  if hold Q
+                if self.card == Q:
+                    if self.oppo_card == K:
+                        self.reward = rChip
+                    if self.oppo_card == J:
+                        self.reward = rChip
+                #  if hold J
+                if self.card == Q:
+                    if self.oppo_card == K:
+                        self.reward = -rChip
+                    if self.oppo_card == Q:
+                        self.reward = -rChip
+            # if the agent bets
             else:
-                if self.observation[2]==K:
-                    self.reward = win2
-                elif self.observation[2]==Q:
-                    self.reward = self.bet_probability * (self.probability * win2 + (1-self.probability) * lose2) \
-                                  + (1-self.bet_probability) * win1
+                # if the opponent pass, win
+                if oppo_action(self.oppo_card) == oPass:
+                    self.reward = rChip
+                # if the opponent bet
                 else:
-                    self.reward = self.bet_probability * lose2 + (1-self.bet_probability) * win1
-                
+                    self.showdown = True
+                    self.observation[3] = self.oppo_card
+                    # if hold K, win
+                    if self.card == K:
+                        if self.oppo_card == Q:
+                            self.reward = 2*rChip
+                        if self.oppo_card == J:
+                            self.reward = 2*rChip
+                    #  if hold Q
+                    if self.card == Q:
+                        if self.oppo_card == K:
+                            self.reward = -2*rChip
+                        if self.oppo_card == J:
+                            self.reward = 2*rChip
+                    #  if hold J
+                    if self.card == Q:
+                        if self.oppo_card == K:
+                            self.reward = -2*rChip
+                        if self.oppo_card == Q:
+                            self.reward = -2*rChip
+
+        # if the opponent bet
         else:
+            # if the agent bet
+            self.showdown = True
+            self.observation[3] = self.oppo_card
             if self.action == aBet:
-                if self.observation[2]==K:
-                    self.reward = win2
-                elif self.observation[2]==Q:
-                    self.reward = self.probability * win2 + (1-self.probability) * lose2
-                else:
-                    self.reward = lose2
+                # showndown and assign value to opponent action & card
+                self.showdown = True
+                self.observation[3] = self.oppo_card
+                # if hold K, win
+                if self.card == K:
+                    if self.oppo_card == Q:
+                        self.reward = 2*rChip
+                    if self.oppo_card == J:
+                        self.reward = 2*rChip
+                #  if hold Q
+                if self.card == Q:
+                    if self.oppo_card == K:
+                        self.reward = 2*rChip
+                    if self.oppo_card == J:
+                        self.reward = -2*rChip
+                #  if hold J
+                if self.card == Q:
+                    if self.oppo_card == K:
+                        self.reward = -2*rChip
+                    if self.oppo_card == Q:
+                        self.reward = -2*rChip
+            # if the agent passes, lose
             else:
-                self.reward = lose1
+                self.reward = -rChip
 
         return (self.observation, self.reward)
+
     # end def
 
     def print(self):
@@ -136,8 +186,8 @@ class KuhnPoker(environment.Environment):
                   ("pass" if self.action == aPass else "bet") + \
                   ", observation: " + \
                   ("the opponent passes" if self.observation[0] == oPass else "the opponent bets") + \
-                  ("the pot is {}"%(self.observation[1])) + \
-                  ("I hold {}"%(self.observation[2])) + \
+                  ("the pot is {}" % (self.observation[1])) + \
+                  ("I hold {}" % (self.observation[2])) + \
                   ", reward: %d" % self.reward
 
         return message
