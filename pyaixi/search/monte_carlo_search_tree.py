@@ -110,8 +110,10 @@ class MonteCarloSearchNode:
         reward = 0.0
 
         if (horizon == 0):
+            # Reach the maximum cycle, return 0
             return reward
         elif(self.type == chance_node):
+            # Reach a chance node
             observation, random_reward = agent.generate_percept_and_update()
             if observation not in self.children:
                 self.children[observation] = MonteCarloSearchNode(decision_node)
