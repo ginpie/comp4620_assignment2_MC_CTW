@@ -106,6 +106,9 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         reward = 0.0
+        if horizon == 0:
+            reward = 0
+
 
         
         return reward
