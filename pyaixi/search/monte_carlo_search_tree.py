@@ -106,10 +106,55 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         reward = 0.0
-        if horizon == 0:
-            reward = 0
+        
+        if (horizon == 0):
+            # Reach the maximum cycle
+            # Return 0
+            return reward
 
+        elif(self.type == chance_node):
+            # Reach a chance node
 
+            # Generate observation and reward according to the agent's history
+            o, r = agent.generate_percept_and_update()
+
+            if o not in self.children:
+                # If not explored, generate a decision child node
+                self.children[o] = MonteCarloSearchNode(decision_node)
+            
+            # Add the child node to the children dictionary
+            o_child = self.children[o]
+
+            # Recursively search until the maximum cycle to get the reward
+            reward = r + o_child.sample(agent, horizon-1)
+
+        elif(self.visits == 0):
+            # Reach the maximum cycle or the decision node is not explored
+            # Use rollout to estimate the reward
+            reward = agent.playout(horizon)
+
+        else:
+            # Select the action according to UCB policy
+            a = self.select_action(agent)
+            # Update agent's model
+            agent.model_update_action(a)
+
+            if a not in self.children:
+                # If not explored, generate an action child node
+                self.children[a] = MonteCarloSearchNode(chance_node)
+
+            # Add the child node to the children dictionary
+            a_child = self.children[a]
+
+            # Recursively search to get the reward
+            reward = a_child.sample(agent, horizon)
+
+        visits = float(self.visits)
+        # Calculate mean reward
+        self.mean = (reward + (visits * self.mean)) / (visits + 1.0)
+        
+        # Update visit number
+        self.visits += 1
         
         return reward
     # end def
