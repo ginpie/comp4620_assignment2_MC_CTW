@@ -26,7 +26,7 @@ from pyaixi import agent, prediction, search, util
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
 from pyaixi.search import monte_carlo_search_tree
-from pyaixi.search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node
+from pyaixi.search.monte_carlo_search_tree import node_enum, chance_node, decision_node
 
 
 class MC_AIXI_CTW_Undo:

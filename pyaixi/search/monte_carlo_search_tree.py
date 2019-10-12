@@ -104,56 +104,64 @@ class MonteCarloSearchNode:
             - `horizon`: how many cycles into the future to sample
         """
 
-        # TODO: implement
         reward = 0.0
         
         if (horizon == 0):
-            # Reach the maximum cycle
+            # Reach the horizon
             # Return 0
             return reward
 
+        # Check if Psi(h) is a chance node
         elif(self.type == chance_node):
             # Reach a chance node
 
-            # Generate observation and reward according to the agent's history
-            o, r = agent.generate_percept_and_update()
+            # Update the context tree history and generate observation and reward
+            # Generate (o, r) from rho(or|h)
+            (o, r) = agent.generate_percept_and_update()
 
+            # Check if T(hor) = 0
             if o not in self.children:
-                # If not explored, generate a decision child node
+                # T(hor) = 0
+                # Not explored, generate a decision child node
+                # Create node Psi(hor)
                 self.children[o] = MonteCarloSearchNode(decision_node)
-            
-            # Add the child node to the children dictionary
-            o_child = self.children[o]
 
-            # Recursively search until the maximum cycle to get the reward
-            reward = r + o_child.sample(agent, horizon-1)
+            # Recursively search until the horizon to get the reward
+            # reward <- r+sample(Psi, hor, m-1)
+            reward = r + self.children[o].sample(agent, horizon-1)
 
+        # Check if T(h) = 0
         elif(self.visits == 0):
-            # Reach the maximum cycle or the decision node is not explored
+            # T(h) = 0
             # Use rollout to estimate the reward
+            # reward <- rollout(h, m)
             reward = agent.playout(horizon)
 
         else:
             # Select the action according to UCB policy
+            # a <- selectaction(Psi, h)
             a = self.select_action(agent)
+
             # Update agent's model
             agent.model_update_action(a)
 
+            # Check if T(ha) = 0
             if a not in self.children:
-                # If not explored, generate an action child node
+                # T(ha) = 0
+                # Not explored, generate a chance child node
+                # Create node Psi(ha)
                 self.children[a] = MonteCarloSearchNode(chance_node)
 
-            # Add the child node to the children dictionary
-            a_child = self.children[a]
-
             # Recursively search to get the reward
-            reward = a_child.sample(agent, horizon)
+            # reward <- r+sample(Psi, ha, m)
+            reward = self.children[a].sample(agent, horizon)
 
-        visits = float(self.visits)
         # Calculate mean reward
-        self.mean = (reward + (visits * self.mean)) / (visits + 1.0)
+        # V(h) <- (reward + T(h)V(h)) / (T(h) + 1)
+        self.mean = (reward + (float(self.visits) * self.mean)) / (float(self.visits) + 1.0)
         
-        # Update visit number
+        # Update visits number
+        # T(h) <- T(h) + 1
         self.visits += 1
         
         return reward
