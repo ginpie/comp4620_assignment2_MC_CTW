@@ -451,19 +451,19 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         for i in xrange(self.mc_simulations):
             new.sample(self, self.horizon)
             self.model_revert(now)
-
+        # initialize the best action as a random chosen one and the best mean to be 0
         best_action = self.generate_random_action()
         best_mean = 0
+        # check all the possoble actions
         for action in self.environment.valid_actions:
-            # if action is unavailable now, do nothing and check another action
-            if action not in new.children:
-                continue
-            # update mean, with reward of exploration
-            mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
-            # update the best action and corresponding reward
-            if mean > best_mean:
-                best_action = action
-                best_mean = mean
+            # if action is available for the present node, update, or do nothing
+            if action in new.children:
+                # update mean with reward of exploration
+                mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
+                # update the best action and corresponding reward if updated mean is larger than the old best one
+                if mean > best_mean:
+                    best_mean = mean
+                    best_action = action
         return best_action
     # end def
 # end class
