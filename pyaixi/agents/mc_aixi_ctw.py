@@ -143,7 +143,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         assert 'mc-simulations' in options, \
                "The required 'mc-simulations' Monte Carlo simulations count option is missing from the given options."
         self.mc_simulations = int(options['mc-simulations'])
-
+        self.exploration_exploitation_rate = 0.01
         self.reset()
     # end def
 
@@ -231,7 +231,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-        return None
+        samples = self.context_tree.generate_random_symbols(self.environment.action_bits())
+        action = self.decode_action((samples))
+        return action
     # end def
 
     def generate_percept(self):
@@ -240,8 +242,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-
-        return None
+        samples = self.context_tree.generate_random_symbols((self.environment.percept_bits()))
+        percept = self.decode_percept(samples)
+        return percept
     # end def
 
     def generate_percept_and_update(self):
@@ -250,7 +253,12 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-        return None
+        samples = self.context_tree.generate_random_symbols_and_update(self.environment.percept_bits())
+        observation, reward = self.decode_percept(samples)
+
+        self.total_reward += reward
+        self.last_update = percept_update
+        return (observation, reward)
     # end def
 
     def get_predicted_action_probability(self, action):
@@ -260,6 +268,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `action`: the action we wish to find the likelihood of.
         """
         # TODO: implement
+        action_symbols = self.encode_action(action)
+        action_predicted = self.context_tree.predict(action_symbols)
+        return action_predicted
     # end def
 
     def history_size(self):
@@ -283,6 +294,17 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        while self.history_size() > undo_instance.history_size:
+            if self.last_update == percept_update:
+                self.context_tree.revert(self.environment.percept_bits())
+                self.last_update = action_update
+            else:
+                self.context_tree.revert_history(self.environment.action_bits())
+                self.last_update = percept_update
+
+        self.age = undo_instance.age
+        self.total_reward = undo_instance.total_reward
+        self.last_update = undo_instance.last_update
     # end def
 
     def model_size(self):
@@ -356,7 +378,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-        return None
+        percept = self.encode_percept(observation, reward)
+        probability = self.context_tree.predict(percept)
+        return probability
     # end def
 
     def playout(self, horizon):
@@ -371,8 +395,15 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        total_reward = 0.
 
-        return 0.0
+        for i in xrange(horizon):
+            action = self.generate_random_action()
+            self.model_update_action(action)
+            observation, reward = self.generate_percept_and_update()
+            total_reward += reward
+
+        return total_reward
     # end def
 
     def reset(self):
@@ -394,7 +425,21 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Use rhoUCT to search for the next action.
 
         # TODO: implement
+        now = MC_AIXI_CTW_Undo(self)
+        new = monte_carlo_search_tree.MonteCarloSearchNode(decision_node)
+        for i in xrange(self.mc_simulations):
+            new.sample(self, self.horizon)
+            self.model_revert(now)
+        best_action = self.generate_random_action()
+        best_mean = 0
 
+        for action in self.environment.valid_actions:
+            if action not in new.children:
+                continue
+            mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
+            if mean > best_mean:
+                best_action = action
+                best_mean = mean
         return best_action
     # end def
 # end class
