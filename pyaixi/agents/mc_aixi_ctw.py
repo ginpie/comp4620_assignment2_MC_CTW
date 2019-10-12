@@ -261,9 +261,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         samples = self.context_tree.generate_random_symbols_and_update(self.environment.percept_bits())
         # get the observation and reward of the percept
         observation, reward = self.decode_percept(samples)
-
-        self.total_reward += reward
+        # update observation and total reward
         self.last_update = percept_update
+        self.total_reward += reward
         return (observation, reward)
     # end def
 
@@ -274,7 +274,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
             - `action`: the action we wish to find the likelihood of.
         """
         # TODO: implement
+        # encode actions to get corresponding symbols
         action_symbols = self.encode_action(action)
+        # get the probability of the action based on the context tree
         action_predicted = self.context_tree.predict(action_symbols)
         return action_predicted
     # end def
@@ -300,14 +302,17 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # deal with the new elements of history
         while self.history_size() > undo_instance.history_size:
+            # when the last update is action update
             if self.last_update == percept_update:
                 self.context_tree.revert(self.environment.percept_bits())
                 self.last_update = action_update
+            # when the last update is percept update
             else:
                 self.context_tree.revert_history(self.environment.action_bits())
                 self.last_update = percept_update
-
+        # revert relevant attributes
         self.age = undo_instance.age
         self.total_reward = undo_instance.total_reward
         self.last_update = undo_instance.last_update
@@ -384,7 +389,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # get the symbols of the (observation, reward) pair
         percept = self.encode_percept(observation, reward)
+        # caculate the probability
         probability = self.context_tree.predict(percept)
         return probability
     # end def
@@ -401,12 +408,18 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # initialize the total reward
         total_reward = 0.
 
+        # caculate all reward in horizon
         for i in xrange(horizon):
+            # genarate an antion randomly
             action = self.generate_random_action()
+            # update the model
             self.model_update_action(action)
+            # get the percept
             observation, reward = self.generate_percept_and_update()
+            # update the total reward
             total_reward += reward
 
         return total_reward
@@ -431,18 +444,23 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # Use rhoUCT to search for the next action.
 
         # TODO: implement
+        # store the state now
         now = MC_AIXI_CTW_Undo(self)
+        # initialize a new tree and update
         new = monte_carlo_search_tree.MonteCarloSearchNode(decision_node)
         for i in xrange(self.mc_simulations):
             new.sample(self, self.horizon)
             self.model_revert(now)
+
         best_action = self.generate_random_action()
         best_mean = 0
-
         for action in self.environment.valid_actions:
+            # if action is unavailable now, do nothing and check another action
             if action not in new.children:
                 continue
+            # update mean, with reward of exploration
             mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
+            # update the best action and corresponding reward
             if mean > best_mean:
                 best_action = action
                 best_mean = mean
