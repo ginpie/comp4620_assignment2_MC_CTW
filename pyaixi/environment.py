@@ -119,7 +119,10 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_actions) >0:
+            out=self.valid_actions[-1]
+        return out
     # end def
 
     def maximum_observation(self):
@@ -127,7 +130,10 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_observations) >0:
+            out=self.valid_observations[-1]
+        return out
     # end def
 
     def maximum_reward(self):
@@ -135,7 +141,10 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_rewards) >0:
+            out=self.valid_rewards[-1]
+        return out
     # end def
 
     def minimum_action(self):
@@ -143,7 +152,10 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_actions) >0:
+            out=self.valid_actions[0]
+        return out
     # end def
 
     def minimum_observation(self):
@@ -151,7 +163,10 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_observations) >0:
+            out=self.valid_observations[0]
+        return out
     # end def
 
     def minimum_reward(self):
@@ -159,7 +174,11 @@ class Environment:
         """
 
         # TODO: implement
-        return None
+        out = None
+        if len(self.valid_rewards) >0:
+            out=self.valid_rewards[0]
+        return out
+        return out
     # end def
 
     def observation_bits(self):
