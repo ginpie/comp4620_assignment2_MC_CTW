@@ -109,31 +109,6 @@ class MonteCarloSearchNode:
         # Initialise reward value
         reward = 0.0
 
-        if (horizon == 0):
-            # Reach the maximum cycle, return 0
-            return reward
-        elif(self.type == chance_node):
-            # Reach a chance node
-            observation, random_reward = agent.generate_percept_and_update()
-            if observation not in self.children:
-                self.children[observation] = MonteCarloSearchNode(decision_node)
-            
-            observation_child = self.children[observation]
-            reward = random_reward + observation_child.sample(agent, horizon-1)
-        elif(self.visits == 0):
-            reward = agent.playout(horizon)
-        else:
-            action = self.select_action(agent)
-            agent.model_update_action(action)
-
-            if action not in self.children:
-                self.children[action] = MonteCarloSearchNode(chance_node)
-            action_child = self.children[action]
-            reward = action_child.sample(agent, horizon)
-        visits = float(self.visits)
-        self.mean = (reward + (visits * self.mean)) / (visits + 1.0)
-        self.visits += 1
-
         return reward
     # end def
 
