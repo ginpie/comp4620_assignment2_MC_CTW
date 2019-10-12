@@ -106,9 +106,6 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         reward = 0.0
-        if horizon == 0:
-            reward = 0
-
 
         
         return reward
@@ -122,8 +119,28 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         best_action = None
+        best_score = 0 # current the score of the best action
         
-
+        nevertry=[] # unexplored nodes
+        
+        for action in agent.environment.valid_actions:
+            score = 0
+            if self.children[action] is None: # find all the unexplored nodes
+                nevertry.append[action]
+                best_score=self.unexplored_bias
+            if len(nevertry)>0: # determine if U == {}
+                continue
+            else:
+                minterval=agent.horizon*(agent.maximum_reward()-agent.minimum_reward()) #m(b-a)
+                score = (self.children[action].mean)/(minterval)+self.unexplored_bias*math.sqrt(math.log(self.visits)/self.children[action].visits)
+                #calculate the whole value of it 
+                if score > best_score: # arg max
+                    best_action = action
+                    best_score = score
+        if len(nevertry)>0:
+            return random.choice(nevertry) # pick a uniformly at random 
+        else:
+            return best_action
         return best_action
     # end def
 # end class
