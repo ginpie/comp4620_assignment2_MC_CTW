@@ -26,8 +26,7 @@ from pyaixi import agent, prediction, search, util
 from pyaixi.agent import update_enum, action_update, percept_update
 from pyaixi.prediction import ctw_context_tree
 from pyaixi.search import monte_carlo_search_tree
-from pyaixi.search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node
-
+from pyaixi.search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node, MonteCarloSearchNode
 
 class MC_AIXI_CTW_Undo:
     """ A class to save details from a MC-AIXI-CTW agent to restore state later.
@@ -241,6 +240,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         # TODO: implement
 
+
+
         return None
     # end def
 
@@ -283,6 +284,24 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+
+        # revert CTW
+        self.revert(self.history_size() - undo_instance.history_size, self.last_update)
+
+        # revert other properties
+        self.last_update = undo_instance.last_update
+        self.age = undo_instance.age
+        self.total_reward = undo_instance.total_reward
+
+
+    def revert(self, number_of_reversion, update_type):
+        # recursively revert CTW history
+        if number_of_reversion != 0:
+            self.context_tree.revert(self.environment.percept_bits() if update_type == percept_update
+                                     else self.environment.action_bits())
+            self.revert(number_of_reversion - 1, self.environment.action_bits() if update_type == percept_update
+                        else self.environment.percept_bits() )
+
     # end def
 
     def model_size(self):
@@ -356,7 +375,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
-        return None
+        symbols = self.encode_percept(observation, reward)
+        return self.context_tree.predict(symbols)
     # end def
 
     def playout(self, horizon):
@@ -372,7 +392,16 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         # TODO: implement
 
-        return 0.0
+        # implemented as per Algorithm 4 from https://arxiv.org/pdf/0909.0801.pdf, Veness et al. 2009
+        reward = 0
+        for i in [0, horizon]:
+            # use Pi-random as baseline policy
+            a = self.generate_action()
+            self.model_update_action()
+
+            o, r = self.generate_percept_and_update()
+            reward += r
+        return reward
     # end def
 
     def reset(self):
@@ -393,8 +422,20 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         # Use rhoUCT to search for the next action.
 
-        # TODO: implement
+        # construct an MCT
+        mct = MonteCarloSearchNode(decision_node)
 
-        return best_action
+        # backup agent state in undo
+        backup = MC_AIXI_CTW_Undo(self)
+
+        # run simulations to train MCT
+        for i in [0, self.mc_simulations]:
+            mct.sample(self, self.horizon)
+            # revert agent state after each trajectory is sampled so that MCT always start from the same root node
+            self.model_revert(backup)
+
+        # sample the best action from MCT
+        return mct.select_action(self)
+
     # end def
 # end class

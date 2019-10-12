@@ -387,7 +387,7 @@ class CTWContextTree:
         pw_hy = self.root.log_probability
 
         # revert y from h
-        self.revert(symbol_list)
+        self.revert(len(symbol_list))
 
         # return rho(hy)/rho(h) => exp(pw_hy) / exp(pw_h)
         return math.exp(pw_hy) / math.exp(pw_h)
