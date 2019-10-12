@@ -231,7 +231,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # sample from the context tree to get symbols of action
         samples = self.context_tree.generate_random_symbols(self.environment.action_bits())
+        # decode the samples into actions
         action = self.decode_action((samples))
         return action
     # end def
@@ -242,7 +244,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # sample from the context tree to get symbols of percept
         samples = self.context_tree.generate_random_symbols((self.environment.percept_bits()))
+        # decode samples into percepts
         percept = self.decode_percept(samples)
         return percept
     # end def
@@ -253,7 +257,9 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         """
 
         # TODO: implement
+        # sample from the context tree to get the symbols of percept
         samples = self.context_tree.generate_random_symbols_and_update(self.environment.percept_bits())
+        # get the observation and reward of the percept
         observation, reward = self.decode_percept(samples)
 
         self.total_reward += reward
