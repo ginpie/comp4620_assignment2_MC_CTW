@@ -96,22 +96,31 @@ class Environment:
     def is_valid_action(self, action):
         """ Returns whether the given action is valid.
         """
-        # TODO: implement
-        return None
+        # TODO(DONE): implement
+        if action in self.valid_actions:
+            return True
+        else:
+            return False
     # end def
 
     def is_valid_observation(self, observation):
         """ Returns whether the given observation is valid.
         """
-        # TODO: implement
-        return None
+        # TODO(DONE): implement
+        if observation in self.valid_observations:
+            return True
+        else:
+            return False
     # end def
 
     def is_valid_reward(self, reward):
         """ Returns whether the given reward is valid.
         """
-        # TODO: implement
-        return None
+        # TODO(DONE): implement
+        if reward in self.valid_rewards:
+            return True
+        else:
+            return False
     # end def
 
     def maximum_action(self):
@@ -177,7 +186,6 @@ class Environment:
         out = None
         if len(self.valid_rewards) >0:
             out=self.valid_rewards[0]
-        return out
         return out
     # end def
 
