@@ -217,7 +217,7 @@ def main(argv):
     default_options["exploration"]     = 0.0    # Do not explore.
     default_options["explore-decay"]   = 1.0    # Exploration rate does not decay.
     default_options["learning-period"] = 0      # Learn forever.
-    default_options["mc-simulations"]  = 100
+    default_options["mc-simulations"]  = 300
     default_options["profile"]         = False  # Whether to profile code.
     default_options["terminate-age"]   = 0      # Never die.
     default_options["verbose"]         = False
