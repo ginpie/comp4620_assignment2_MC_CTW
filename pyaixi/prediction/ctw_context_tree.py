@@ -123,22 +123,28 @@ class CTWContextTreeNode:
            The log KT estimate of the conditional probability of observing a zero given
            we have observed `a` zeros and `b` ones at the current node is
 
-             log(Pr_kt(0 | 0^a 1^b)) = log((a + 1/2)/({a + b + 1))
+             log(Pr_kt(0 | 0^a 1^b)) = log((a + 1/2)/(a + b + 1))
 
            Similarly, the estimate of the conditional probability of observing a one is
 
-             log(\Pr_kt(1 |0^a 1^b)) = log((b + 1/2)/(a + b + 1))
+             log(Pr_kt(1 |0^a 1^b)) = log((b + 1/2)/(a + b + 1))
 
            - `symbol`: the symbol for which to calculate the log KT estimate of
              conditional probability.
-
              0 corresponds to calculating `log(Pr_kt(0 | 0^a 1^b)` and
              1 corresponds to calculating `log(Pr_kt(1 | 0^a 1^b)`.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
 
-        return None
+        a = self.symbol_count[0]
+        b = self.symbol_count[1]
+        if symbol == 0:
+            log_kt = math.log((a + 1 / 2) / (a + b + 1))
+        else:
+            log_kt = math.log((b + 1 / 2) / (a + b + 1))
+
+        return log_kt
     # end def
 
     def revert(self, symbol):
@@ -149,7 +155,17 @@ class CTWContextTreeNode:
             - `symbol`: the symbol used in the previous update.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        if self.symbol_count[symbol] >= 1:
+            self.symbol_count[symbol] -= 1
+
+        self.log_kt -= self.log_kt_multiplier(symbol)
+
+        if self.children.get(symbol):
+            del self.children[symbol]
+
+        self.update_log_probability()
     # end def
 
     def size(self):
@@ -167,7 +183,15 @@ class CTWContextTreeNode:
             - `symbol`: the symbol that was observed.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        self.symbol_count[symbol] += 1
+        # log[Pr_kt(a + 1, b)] = log[(a + 1 / 2) / (a + b + 1)] + log[Pr_kt(a, b)]
+        # log[Pr_kt(a, b + 1)] = log[(b + 1 / 2) / (a + b + 1)] + log[Pr_kt(a, b)]
+        self.log_kt = self.log_kt_multiplier(symbol)
+        self.update_log_probability()
+
+
     # end def
 
     def update_log_probability(self):
@@ -205,7 +229,21 @@ class CTWContextTreeNode:
             the argument of the exponent `exp(log(b) - log(a))` is as small as possible.
         """
 
-        # TODO: implement
+        # TODO(DONE): implement
+
+        pr = 0
+        # log(P^n_w) := log(Pr_kt(h_n)            (if n is a leaf node)
+        if self.is_leaf_node():
+            pr = self.log_kt
+        # log(P^n_w) := log(1/2 Pr_kt(h_n)) + 1/2 P^n0_w x P^n1_w)      (if n is NOT a leaf node)
+        else:
+            pn01 = 0
+            for child in self.children:
+                pn01 += child.log_probability
+            # log(P^n_w) := log(1/2) + log(Pr_kt(h_n)) + log(1 + exp( min[log(P^n0_w) + log(P^n1_w) - log(Pr_kt(h_n))] ) )
+            pr = math.log(1/2) + self.log_kt + math.log(1 + math.exp(- abs(pn01 - self.log_kt)))
+
+        self.log_probability = pr
     # end def
 
     def visits(self):
@@ -297,7 +335,7 @@ class CTWContextTree:
 
             - `symbol_count`: the number of symbols to generate.
         """
-        symbol_list = self.generate_random_symbols_and_update(symbol_list, symbol_count)
+        symbol_list = self.generate_random_symbols_and_update(symbol_count)
         self.revert(symbol_count)
 
         return symbol_list
@@ -313,7 +351,16 @@ class CTWContextTree:
 
         # TODO: implement
 
-        return None
+        symbol_list = []
+        for i in range(0, symbol_count):
+            if random.randint(0, 1) >= self.predict([1]):
+                next_symbol = 1
+            else:
+                next_symbol = 0
+            symbol_list.append(next_symbol)
+            self.update([next_symbol])
+
+        return symbol_list
     # end def
 
     def predict(self, symbol_list):
@@ -332,7 +379,18 @@ class CTWContextTree:
 
         # TODO: implement
 
-        return None
+        # rho(h)
+        pw_h = self.root.log_probability
+
+        # add y to h to produce rho(hy)
+        self.update(symbol_list)
+        pw_hy = self.root.log_probability
+
+        # revert y from h
+        self.revert(len(symbol_list))
+
+        # return rho(hy)/rho(h) => exp(pw_hy) / exp(pw_h)
+        return math.exp(pw_hy) / math.exp(pw_h)
     # end def
 
     def revert(self, symbol_count = 1):
@@ -342,6 +400,22 @@ class CTWContextTree:
         """
 
         # TODO: implement
+
+        for i in range(0, symbol_count):
+
+            # symbol count to revert should never exceeds length of history in practice, hence we shouldn't need to
+            # particularly handle for boundary case
+            symbol = self.history[len(self.history) - 1 - i]
+
+            self.update_context()
+
+            # nodes in self.context are in order of parent -> children, we need to revert children then parent
+            for n in reversed(self.context):
+                n.revert(symbol)
+
+            # revert the symbol from history
+            self.revert_history()
+
     # end def
 
     def revert_history(self, symbol_count = 1):
@@ -373,6 +447,20 @@ class CTWContextTree:
         """
 
         # TODO: implement
+
+        # iterate through symbol
+        for symbol in symbol_list:
+            # for each symbol, go through context tree -> the path from root to leaf based on history and increase a or b for each node in path
+            # i.e. if history is 01101, symbol is 1
+            # we'll go through each node corresponds to 0, 01, 011, 0110, 01101 and increase their b value
+            # this could be easily done through self.update_context() which returns the list of nodes in context
+            self.update_context()
+            for i in range(0, len(self.context)):
+                # update leaf first, as Pw of parents depends on children
+                n = self.context[len(self.context) - 1 - i]
+                n.update(symbol)
+            # insert the symbol to history before next round of process - this is important as context changes
+            self.update_history([symbol])
     # end def
 
     def update_context(self):
@@ -384,8 +472,25 @@ class CTWContextTree:
 
             Creates the nodes if they do not exist.
         """
-
         # TODO: implement
+
+        v = self.root
+        for i in range(0, self.depth):
+            # handle corner case
+            if i >= len(self.history):
+                break
+
+            # find the ith suffix in history string
+            symbol = self.history[len(self.history) - 1 - i]
+            # if node not exists, create it
+            if v.children[symbol] is None:
+                u = CTWContextTreeNode(self)
+                v.children[symbol] = u
+                self.tree_size += 1
+            # else creates new node and add the the list
+            v = v.children[symbol]
+            self.context.append(v)
+
     # end def
 
     def update_history(self, symbol_list):
