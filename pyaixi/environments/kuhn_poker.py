@@ -67,7 +67,7 @@ class KuhnPoker(environment.Environment):
         #  3:the opponent's card,
         #  4:the next action of the opponent,
         #  5:whether showdown]
-        self.observation = [self.action, self.card, None, None, self.next_step, self.showdown]
+        self.observation = enumerate([self.action, self.card, None, None, self.next_step, self.showdown])
         # initialize gamma in Nash strategy
         self.gamma = 0.5
         self.reset()
@@ -212,6 +212,6 @@ class KuhnPoker(environment.Environment):
     # end def
 
     def reset(self):
-        self.observation = [None, None, None, None, None, False]
+        self.observation = enumerate([None, None, None, None, None, False])
         self.reward = None
 # end class
