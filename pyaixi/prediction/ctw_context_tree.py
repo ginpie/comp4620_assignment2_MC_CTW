@@ -475,6 +475,7 @@ class CTWContextTree:
         # TODO: implement
 
         v = self.root
+        self.context = [v]
         for i in range(0, self.depth):
             # handle corner case
             if i >= len(self.history):
