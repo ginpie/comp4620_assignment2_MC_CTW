@@ -108,7 +108,65 @@ class MonteCarloSearchNode:
 
         # Initialise reward value
         reward = 0.0
+        
+        if (horizon == 0):
+            # Reach the horizon
+            # Return 0
+            return reward
 
+        # Check if Psi(h) is a chance node
+        elif(self.type == chance_node):
+            # Reach a chance node
+
+            # Update the context tree history and generate observation and reward
+            # Generate (o, r) from rho(or|h)
+            (o, r) = agent.generate_percept_and_update()
+
+            # Check if T(hor) = 0
+            if o not in self.children:
+                # T(hor) = 0
+                # Not explored, generate a decision child node
+                # Create node Psi(hor)
+                self.children[o] = MonteCarloSearchNode(decision_node)
+
+            # Recursively search until the horizon to get the reward
+            # reward <- r+sample(Psi, hor, m-1)
+            reward = r + self.children[o].sample(agent, horizon-1)
+
+        # Check if T(h) = 0
+        elif(self.visits == 0):
+            # T(h) = 0
+            # Use rollout to estimate the reward
+            # reward <- rollout(h, m)
+            reward = agent.playout(horizon)
+
+        else:
+            # Select the action according to UCB policy
+            # a <- selectaction(Psi, h)
+            a = self.select_action(agent)
+
+            # Update agent's model
+            agent.model_update_action(a)
+
+            # Check if T(ha) = 0
+            if a not in self.children:
+                # T(ha) = 0
+                # Not explored, generate a chance child node
+                # Create node Psi(ha)
+                self.children[a] = MonteCarloSearchNode(chance_node)
+
+            # Recursively search to get the reward
+            # reward <- r+sample(Psi, ha, m)
+            reward = self.children[a].sample(agent, horizon)
+
+        # Calculate mean reward
+        # V(h) <- (reward + T(h)V(h)) / (T(h) + 1)
+        self.mean = (reward + (float(self.visits) * self.mean)) / (float(self.visits) + 1.0)
+        
+        # Update visits number
+        # T(h) <- T(h) + 1
+        self.visits += 1
+        
         return reward
     # end def
 
@@ -120,8 +178,28 @@ class MonteCarloSearchNode:
 
         # TODO: implement
         best_action = None
+        best_score = 0 # current the score of the best action
         
-
+        nevertry=[] # unexplored nodes
+        
+        for action in agent.environment.valid_actions:
+            score = 0
+            if self.children[action] is None: # find all the unexplored nodes
+                nevertry.append(action)
+                best_score=self.unexplored_bias
+            if len(nevertry)>0: # determine if U == {}
+                continue
+            else:
+                minterval=agent.horizon*(agent.maximum_reward()-agent.minimum_reward()) #m(b-a)
+                score = (self.children[action].mean)/(minterval)+self.unexplored_bias*math.sqrt(math.log(self.visits)/self.children[action].visits)
+                #calculate the whole value of it 
+                if score > best_score: # arg max
+                    best_action = action
+                    best_score = score
+        if len(nevertry)>0:
+            return random.choice(nevertry) # pick a uniformly at random 
+        else:
+            return best_action
         return best_action
     # end def
 # end class
