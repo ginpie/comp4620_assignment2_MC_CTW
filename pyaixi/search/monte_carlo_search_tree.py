@@ -166,7 +166,7 @@ class MonteCarloSearchNode:
         # Update visits number
         # T(h) <- T(h) + 1
         self.visits += 1
-        
+
         return reward
     # end def
 
