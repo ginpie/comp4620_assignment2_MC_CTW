@@ -87,10 +87,13 @@ class Environment:
     def action_bits(self):
         """ Returns the maximum number of bits required to represent an action.
         """
-
-        # TODO: implement
-
-        return None
+        # TODO（DONE）: implement
+        bits_list = []
+        # Check the number of bits required to represent every action
+        for action in self.valid_actions:
+            bits_list.append(util.bits_required(action))
+        # Return the max number of bits required
+        return max(bits_list)
     # end def
 
     def is_valid_action(self, action):
@@ -192,24 +195,27 @@ class Environment:
     def observation_bits(self):
         """ Returns the maximum number of bits required to represent an observation.
         """
-
-        # TODO: implement
-
-        return None
+        # TODO（DONE）: implement
+        bits_list = []
+        # Check the number of bits required to represent every observation
+        for observation in self.valid_observations:
+            bits_list.append(util.bits_required(observation))
+        # Return the max number of bits required
+        return max(bits_list)
     # end def
 
     def percept_bits(self):
         """ Returns the maximum number of bits required to represent a percept.
         """
-        # TODO: implement
-
-        return None
+        # TODO（DONE）: implement
+        return self.observation_bits() + self.reward_bits()
     # end def
 
     def perform_action(self, action):
         """ Receives the agent's action and calculates the new environment percept.
         """
         # TODO: implement
+        return None
     # end def
 
     def print(self):
@@ -222,9 +228,12 @@ class Environment:
     def reward_bits(self):
         """ Returns the maximum number of bits required to represent a reward.
         """
-
-        # TODO: implement
-
-        return None
+        # TODO（DONE）: implement
+        bits_list = []
+        # Check the number of bits required to represent every reward
+        for reward in self.valid_rewards:
+            bits_list.append(util.bits_required(reward))
+        # Return the max number of bits required
+        return max(bits_list)
     # end def
 # end class
