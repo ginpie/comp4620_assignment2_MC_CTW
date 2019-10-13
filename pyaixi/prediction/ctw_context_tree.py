@@ -238,7 +238,7 @@ class CTWContextTreeNode:
         # log(P^n_w) := log(1/2 Pr_kt(h_n)) + 1/2 P^n0_w x P^n1_w)      (if n is NOT a leaf node)
         else:
             pn01 = 0
-            for child in self.children:
+            for key, child in self.children.items():
                 pn01 += child.log_probability
             # log(P^n_w) := log(1/2) + log(Pr_kt(h_n)) + log(1 + exp( min[log(P^n0_w) + log(P^n1_w) - log(Pr_kt(h_n))] ) )
             pr = math.log(1/2) + self.log_kt + math.log(1 + math.exp(- abs(pn01 - self.log_kt)))
@@ -483,7 +483,7 @@ class CTWContextTree:
             # find the ith suffix in history string
             symbol = self.history[len(self.history) - 1 - i]
             # if node not exists, create it
-            if v.children[symbol] is None:
+            if symbol not in v.children:
                 u = CTWContextTreeNode(self)
                 v.children[symbol] = u
                 self.tree_size += 1

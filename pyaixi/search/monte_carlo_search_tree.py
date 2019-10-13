@@ -184,7 +184,7 @@ class MonteCarloSearchNode:
         
         for action in agent.environment.valid_actions:
             score = 0
-            if self.children[action] is None: # find all the unexplored nodes
+            if action not in self.children: # find all the unexplored nodes
                 nevertry.append(action)
                 best_score=self.unexplored_bias
             if len(nevertry)>0: # determine if U == {}
