@@ -319,37 +319,37 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # TODO: implement
 
         ''' context-tree branch implementation '''
-        # revert CTW
-        self.revert(self.history_size() - undo_instance.history_size, self.last_update)
-
-        # revert other properties
-        self.last_update = undo_instance.last_update
-        self.age = undo_instance.age
-        self.total_reward = undo_instance.total_reward
-
-    def revert(self, number_of_reversion, update_type):
-        # recursively revert CTW history
-        if number_of_reversion != 0:
-            self.context_tree.revert(self.environment.percept_bits() if update_type == percept_update
-                                     else self.environment.action_bits())
-            self.revert(number_of_reversion - 1, self.environment.action_bits() if update_type == percept_update
-            else self.environment.percept_bits())
+    #     # revert CTW
+    #     self.revert(self.history_size() - undo_instance.history_size, self.last_update)
+    #
+    #     # revert other properties
+    #     self.last_update = undo_instance.last_update
+    #     self.age = undo_instance.age
+    #     self.total_reward = undo_instance.total_reward
+    #
+    # def revert(self, number_of_reversion, update_type):
+    #     # recursively revert CTW history
+    #     if number_of_reversion != 0:
+    #         self.context_tree.revert(self.environment.percept_bits() if update_type == percept_update
+    #                                  else self.environment.action_bits())
+    #         self.revert(number_of_reversion - 1, self.environment.action_bits() if update_type == percept_update
+    #         else self.environment.percept_bits())
 
         ''' agent branch implementation '''
-        # # deal with the new elements of history
-        # while self.history_size() > undo_instance.history_size:
-        #     # when the last update is action update
-        #     if self.last_update == percept_update:
-        #         self.context_tree.revert(self.environment.percept_bits())
-        #         self.last_update = action_update
-        #     # when the last update is percept update
-        #     else:
-        #         self.context_tree.revert_history(self.environment.action_bits())
-        #         self.last_update = percept_update
-        # # revert relevant attributes
-        # self.age = undo_instance.age
-        # self.total_reward = undo_instance.total_reward
-        # self.last_update = undo_instance.last_update
+        # deal with the new elements of history
+        while self.history_size() > undo_instance.history_size:
+            # when the last update is action update
+            if self.last_update == percept_update:
+                self.context_tree.revert(self.environment.percept_bits())
+                self.last_update = action_update
+            # when the last update is percept update
+            else:
+                self.context_tree.revert_history(self.environment.action_bits())
+                self.last_update = percept_update
+        # revert relevant attributes
+        self.age = undo_instance.age
+        self.total_reward = undo_instance.total_reward
+        self.last_update = undo_instance.last_update
 
     # end def
 
@@ -494,43 +494,43 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         # TODO: implement
 
         ''' context-tree branch implementation '''
-        # construct an MCT
-        mct = MonteCarloSearchNode(decision_node)
-
-        # backup agent state in undo
-        backup = MC_AIXI_CTW_Undo(self)
-
-        # run simulations to train MCT
-        for i in [0, self.mc_simulations]:
-            mct.sample(self, self.horizon)
-            # revert agent state after each trajectory is sampled so that MCT always start from the same root node
-            self.model_revert(backup)
-
-        # sample the best action from MCT
-        return mct.select_action(self)
+        # # construct an MCT
+        # mct = MonteCarloSearchNode(decision_node)
+        #
+        # # backup agent state in undo
+        # backup = MC_AIXI_CTW_Undo(self)
+        #
+        # # run simulations to train MCT
+        # for i in [0, self.mc_simulations]:
+        #     mct.sample(self, self.horizon)
+        #     # revert agent state after each trajectory is sampled so that MCT always start from the same root node
+        #     self.model_revert(backup)
+        #
+        # # sample the best action from MCT
+        # return mct.select_action(self)
 
         ''' agent branch implementation '''
-        # # store the state now
-        # now = MC_AIXI_CTW_Undo(self)
-        # # initialize a new tree and update
-        # new = monte_carlo_search_tree.MonteCarloSearchNode(decision_node)
-        # for i in xrange(self.mc_simulations):
-        #     new.sample(self, self.horizon)
-        #     self.model_revert(now)
-        # # initialize the best action as a random chosen one and the best mean to be 0
-        # best_action = self.generate_random_action()
-        # best_mean = 0
-        # # check all the possoble actions
-        # for action in self.environment.valid_actions:
-        #     # if action is available for the present node, update, or do nothing
-        #     if action in new.children:
-        #         # update mean with reward of exploration
-        #         mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
-        #         # update the best action and corresponding reward if updated mean is larger than the old best one
-        #         if mean > best_mean:
-        #             best_mean = mean
-        #             best_action = action
-        # return best_action
+        # store the state now
+        now = MC_AIXI_CTW_Undo(self)
+        # initialize a new tree and update
+        new = monte_carlo_search_tree.MonteCarloSearchNode(decision_node)
+        for i in xrange(self.mc_simulations):
+            new.sample(self, self.horizon)
+            self.model_revert(now)
+        # initialize the best action as a random chosen one and the best mean to be 0
+        best_action = self.generate_random_action()
+        best_mean = 0
+        # check all the possoble actions
+        for action in self.environment.valid_actions:
+            # if action is available for the present node, update, or do nothing
+            if action in new.children:
+                # update mean with reward of exploration
+                mean = new.children[action].mean + (random.random()*self.exploration_exploitation_rate)
+                # update the best action and corresponding reward if updated mean is larger than the old best one
+                if mean > best_mean:
+                    best_mean = mean
+                    best_action = action
+        return best_action
 
     # end def
 # end class
