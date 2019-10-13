@@ -215,14 +215,14 @@ class Environment:
         """ Receives the agent's action and calculates the new environment percept.
         """
         # TODO: implement
-        return None
+        pass
     # end def
 
     def print(self):
         """ String representation convenience method from the C++ version.
         """
         # TODO: implement
-        return None
+        return str(self)
     # end def
 
     def reward_bits(self):
