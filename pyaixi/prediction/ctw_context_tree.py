@@ -162,8 +162,9 @@ class CTWContextTreeNode:
 
         self.log_kt -= self.log_kt_multiplier(symbol)
 
-        if self.children.get(symbol):
+        if symbol in self.children and self.children[symbol].visits() == 0:
             del self.children[symbol]
+            self.tree.tree_size -= 1
 
         self.update_log_probability()
     # end def
