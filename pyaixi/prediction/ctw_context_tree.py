@@ -19,23 +19,23 @@ from six.moves import xrange
 log_half = math.log(0.5)
 
 class CTWContextTreeNode:
-    """ The CTWContextTreeNode class represents a node in an action-conditional context tree.
+	""" The CTWContextTreeNode class represents a node in an action-conditional context tree.
 
 
-        The purpose of each node is to calculate the weighted probability of observing
-        a particular bit sequence.
+		The purpose of each node is to calculate the weighted probability of observing
+		a particular bit sequence.
 
-        In particular, denote by `n` the current node, by `n0` and `n1`  the child nodes,
-        by `h_n` the subsequence of the history relevant to node `n`, and by `a`
-        and `b` the number of zeros and ones in `h_n`.
+		In particular, denote by `n` the current node, by `n0` and `n1`  the child nodes,
+		by `h_n` the subsequence of the history relevant to node `n`, and by `a`
+		and `b` the number of zeros and ones in `h_n`.
 
-        Then the weighted block probability of observing `h_n` at node `n` is given by
+		Then the weighted block probability of observing `h_n` at node `n` is given by
 
-          P_w^n(h_n) :=
+		  P_w^n(h_n) :=
   
-            Pr_kt(h_n)                        (if n is a leaf node)
-            1/2 Pr_kt(h_n) +
-            1/2 P_w^n0(h_n0) P_w^n1(h_n1)     (otherwise)
+			Pr_kt(h_n)                        (if n is a leaf node)
+			1/2 Pr_kt(h_n) +
+			1/2 P_w^n0(h_n0) P_w^n1(h_n1)     (otherwise)
 
 		where `Pr_kt(h_n) = Pr_kt(a, b)` is the Krichevsky-Trofimov (KT) estimator defined by the relations
 
@@ -246,8 +246,6 @@ class CTWContextTreeNode:
 			a = max(pr, pn01)
 			b = min(pr, pn01)
 
-			# log(P^n_w) := log(1/2) + log(Pr_kt(h_n)) + log(1 + exp( min[log(P^n0_w) + log(P^n1_w) - log(Pr_kt(h_n))] ) )
-			# pr = log_half + self.log_kt + math.log(1 + math.exp(-abs(pn01 - self.log_kt)))
 			pr = log_half + a + math.log(1 + math.exp(b-a))
 
 		self.log_probability = pr
@@ -396,9 +394,9 @@ class CTWContextTree:
 		# revert y from h
 		self.revert(len(symbol_list))
 
-        # return rho(hy)/rho(h) => exp(pw_hy) / exp(pw_h)
-        return math.exp(pw_hy) / math.exp(pw_h)
-    # end def
+		# return rho(hy)/rho(h) => exp(pw_hy) / exp(pw_h)
+		return math.exp(pw_hy - pw_h)
+	# end def
 
 	def revert(self, symbol_count = 1):
 		""" Restores the context tree to its state prior to a specified number of updates.
