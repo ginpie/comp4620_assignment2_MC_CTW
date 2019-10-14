@@ -242,7 +242,7 @@ class CTWContextTreeNode:
             for key, child in self.children.items():
                 pn01 += child.log_probability
             # log(P^n_w) := log(1/2) + log(Pr_kt(h_n)) + log(1 + exp( min[log(P^n0_w) + log(P^n1_w) - log(Pr_kt(h_n))] ) )
-            pr = math.log(1/2) + self.log_kt + math.log(1 + math.exp(- abs(pn01 - self.log_kt)))
+            pr = log_half + self.log_kt + math.log(1 + math.exp(abs(pn01 - self.log_kt)))
 
         self.log_probability = pr
     # end def

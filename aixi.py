@@ -167,14 +167,14 @@ def interaction_loop(agent = None, environment = None, options = {}):
         
 
         # Print to standard output when cycle == 2^n or on verbose option.
-        if verbose or (cycle & (cycle - 1)) == 0:
-            message = "cycle: %s" % str(cycle) + os.linesep + \
-                      "average reward: %f" % agent.average_reward()
-            if explore:
-                message += os.linesep + "explore rate: %f" % float(explore_rate) + os.linesep
-            # end if
-
-            print(message)
+        # if verbose or (cycle & (cycle - 1)) == 0:
+        #     message = "cycle: %s" % str(cycle) + os.linesep + \
+        #               "average reward: %f" % agent.average_reward()
+        #     if explore:
+        #         message += os.linesep + "explore rate: %f" % float(explore_rate) + os.linesep
+        #     # end if
+        #
+        #     print(message)
         # end def
 
         # Print environment state if verbose option is true.
