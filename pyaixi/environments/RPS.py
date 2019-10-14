@@ -35,10 +35,11 @@ oPaper=RPS_observation_enum.oPaper
 oScissor=RPS_observation_enum.oScissor
 
 #translate the rewards to the -1 0 1
+'''
 RPS_reward_enum.rLose=-1
 RPS_reward_enum.rDraw=0
 RPS_reward_enum.rWin=1
-
+'''
 rLose=RPS_reward_enum.rLose
 rDraw=RPS_reward_enum.rDraw
 rWin=RPS_reward_enum.rWin
