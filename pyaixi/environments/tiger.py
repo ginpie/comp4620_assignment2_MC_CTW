@@ -15,8 +15,10 @@ sys.path.insert(0, PROJECT_ROOT)
 
 
 tiger_action_enum = util.enum('aListen', 'aLeft', 'aRight')
-tiger_observation_enum = util.enum('oLeft', 'oRight', 'oTiger', 'oGold')
-tiger_reward_enum = util.enum('rTiger', 'rGold', 'rListen')
+tiger_observation_enum = util.enum('oLeft', 'oRight', 'oTiger', 'oGold', 'oNone')
+
+# tiger normalised from -100 to 0, gold from 10 to 110, listen from -1 to 99
+tiger_reward_enum = util.enum(rTiger=0, rGold=110, rListen=99)
 
 aListen = tiger_action_enum.aListen
 aLeft = tiger_action_enum.aLeft
@@ -26,6 +28,7 @@ oLeft = tiger_observation_enum.oLeft
 oRight = tiger_observation_enum.oRight
 oTiger = tiger_observation_enum.oTiger
 oGold = tiger_observation_enum.oGold
+oNone = tiger_observation_enum.oNone
 
 rTiger = tiger_reward_enum.rTiger
 rGold = tiger_reward_enum.rGold
@@ -56,7 +59,7 @@ class Tiger(environment.Environment):
 		self.listen_observation = [oLeft if self.winning_action == aLeft else oRight, oRight if self.winning_action == aLeft else oLeft]
 
 		# Set an initial percept.
-		self.observation = None
+		self.observation = oNone
 		self.reward = 0
 
 	# end def
@@ -71,7 +74,7 @@ class Tiger(environment.Environment):
 		self.action = action
 
 		# handle listen action
-		if action == tiger_action_enum.listen:
+		if action == tiger_action_enum.aListen:
 			if random.random() < self.listen_probability:
 				observation = self.listen_observation[0]
 			else:
