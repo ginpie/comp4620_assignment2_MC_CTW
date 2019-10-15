@@ -99,9 +99,7 @@ class Tiger(environment.Environment):
 		""" Returns a string indicating the status of the environment.
 		"""
 
-		message = "observation: " + \
-		          (self.observation[1:].lower()) + \
-		          ", reward: %d" % self.reward
+		message = "observation: {}, , reward: {}".format(self.observation, self.reward)
 
 		return message
 # end def
