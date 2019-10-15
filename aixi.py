@@ -80,6 +80,8 @@ def interaction_loop(agent = None, environment = None, options = {}):
         - `environment`: the environment object.
         - `options`: the configuration options.
     """
+	# create a log file
+    log = open('result.log', 'a+')
 
     # Apply a random seed (Default: 0)
     random.seed(int(options.get("random-seed", 0)))
@@ -165,6 +167,8 @@ def interaction_loop(agent = None, environment = None, options = {}):
         print(message)
         # TODO: implement
         
+		# write to log
+        log.write(message + '\n')
 
         # Print to standard output when cycle == 2^n or on verbose option.
         # if verbose or (cycle & (cycle - 1)) == 0:
