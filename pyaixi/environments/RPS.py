@@ -145,7 +145,7 @@ class RPS(environment.Environment):
             observationstring='Paper'
         elif self.observation==oScissor:
             observationstring='Scissor'
-        massage="action: "+actionstring+", observation: "+observationstring+", reward: "+self.reward
+        massage="action: "+actionstring+", observation: "+observationstring+", reward: "+str(self.reward)
         
         return massage
          
