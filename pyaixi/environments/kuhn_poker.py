@@ -92,7 +92,7 @@ class KuhnPoker(environment.Environment):
                         self.reward = (rLose2 if self.smallerThan(self.agent_card, self.opponent_card) else rWin2)
                     else:
                         self.opponent_action = aPass
-                        self.reward = rLose1
+                        self.reward = rWin1
 
         self.game_reset()
         return self.observation, self.reward
@@ -140,7 +140,7 @@ class KuhnPoker(environment.Environment):
         3. When having a Queen he should always check, and if the other player bets after this check,
            he should call with the probability of pj + 1/3.
         """
-        pj = 0.2
+        pj = 0.3
         pq = pj * 3
         pk = pj + 1.0/3.0
         self.pb = pj
