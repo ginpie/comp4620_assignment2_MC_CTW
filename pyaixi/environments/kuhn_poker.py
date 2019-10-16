@@ -99,14 +99,14 @@ class KuhnPoker(environment.Environment):
     # end def
 
     def smallerThan(self, card1, card2):
-        if card1 == 'oJ':
+        if card1 == J:
             return True
-        elif card1 == 'oK':
+        elif card1 == K:
             return False
 
-        if card2 == 'oJ':
+        if card2 == J:
             return False
-        elif card2 == 'oK':
+        elif card2 == K:
             return True
     # end def
 
@@ -140,7 +140,7 @@ class KuhnPoker(environment.Environment):
         3. When having a Queen he should always check, and if the other player bets after this check,
            he should call with the probability of pj + 1/3.
         """
-        pj = 0.3
+        pj = 0.2
         pq = pj * 3
         pk = pj + 1.0/3.0
         self.pb = pj
