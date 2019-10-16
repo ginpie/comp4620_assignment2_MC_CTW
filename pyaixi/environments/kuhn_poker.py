@@ -60,6 +60,15 @@ class KuhnPoker(environment.Environment):
         # Save the action
         self.agent_action = action
 
+        #                      /  Game start  \
+        # Opponent:          pass            bet
+        #                   /    \          /   \
+        # Agent:        pass    bet       pass  bet
+        #                 |    /   \        |    |
+        # Opp/Res:      +-1  pass  bet     -1   +-2
+        #                     |     |
+        # Reward:            +1    +-2
+
         # opponent initially bets
         if self.opponent_action == aBet:
             # agent folds
@@ -158,6 +167,6 @@ class KuhnPoker(environment.Environment):
             self.opponent_action = aBet
 
         # observation of the agent is a concatenation of opponent_action and agent_card
-        self.observation = self.opponent_action + self.agent_card
-
+        # self.observation = self.opponent_action + self.agent_card
+        self.observation = self.agent_card + (oPass if (self.opponent_action == aPass) else oBet)
 # end class
