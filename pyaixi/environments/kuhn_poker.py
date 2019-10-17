@@ -17,7 +17,10 @@ sys.path.insert(0, PROJECT_ROOT)
 kuhn_action_enum = util.enum('aPass', 'aBet')
 
 # define observations
-kuhn_observation_enum = util.enum('oPass', 'oBet', 'oK', 'oQ', 'oJ')
+kuhn_observation_enum = util.enum('oPJ', 'oPQ', 'oPK', 'oBJ', 'oBQ', 'oBK')
+
+# define cards
+kuhn_card_enum = util.enum('J', 'Q', 'K')
 
 # define rewards: there are fout rewards, and no draw
 kuhn_reward_enum = util.enum(rLose2=0, rLose1=1, rWin1=3, rWin2=4)
@@ -25,11 +28,16 @@ kuhn_reward_enum = util.enum(rLose2=0, rLose1=1, rWin1=3, rWin2=4)
 aPass = kuhn_action_enum.aPass
 aBet = kuhn_action_enum.aBet
 
-oPass = kuhn_observation_enum.oPass
-oBet = kuhn_observation_enum.oBet
-K = kuhn_observation_enum.oK
-Q = kuhn_observation_enum.oQ
-J = kuhn_observation_enum.oJ
+oPJ = kuhn_observation_enum.oPJ
+oPQ = kuhn_observation_enum.oPQ
+oPK = kuhn_observation_enum.oPK
+oBJ = kuhn_observation_enum.oBJ
+oBQ = kuhn_observation_enum.oBQ
+oBK = kuhn_observation_enum.oBK
+
+J = kuhn_card_enum.J
+Q = kuhn_card_enum.Q
+K = kuhn_card_enum.K
 
 rLose2 = kuhn_reward_enum.rLose2
 rLose1 = kuhn_reward_enum.rLose1
@@ -46,9 +54,9 @@ class KuhnPoker(environment.Environment):
         self.valid_actions = list(kuhn_action_enum.keys())
         self.valid_observations = list(kuhn_observation_enum.keys())
         self.valid_rewards = list(kuhn_reward_enum.keys())
+        self.agent_action = 0
         self.reward = 0
-        self.agent_action = 'aPass'
-        self.observation = ""
+        self.opponent_init = 0
 
         self.game_reset()
 
@@ -103,19 +111,28 @@ class KuhnPoker(environment.Environment):
                         self.opponent_action = aPass
                         self.reward = rWin1
 
+        # print("agent card: ", self.agent_card)
+        # print("opponent card: ", self.opponent_card)
+        # print("opponent initial: ", self.opponent_init)
+        # print("agent action: ", self.agent_action)
+        # print("opponent action: ", self.opponent_action)
+        # print("reward: ", self.reward)
+
+        obser = self.observation
         self.game_reset()
-        return self.observation, self.reward
+
+        return obser, self.reward
     # end def
 
     def smallerThan(self, card1, card2):
-        if card1 == J:
+        if card1 == 0:
             return True
-        elif card1 == K:
+        elif card1 == 2:
             return False
 
-        if card2 == J:
+        if card2 == 0:
             return False
-        elif card2 == K:
+        elif card2 == 2:
             return True
     # end def
 
@@ -135,7 +152,7 @@ class KuhnPoker(environment.Environment):
 
     def game_reset(self):
         # shuffle
-        self.dealer = random.sample([K, Q, J], 2)
+        self.dealer = random.sample([J, Q, K], 2)
         # deal
         self.agent_card = self.dealer[0]
         self.opponent_card = self.dealer[1]
@@ -150,8 +167,8 @@ class KuhnPoker(environment.Environment):
            he should call with the probability of pj + 1/3.
         """
         pj = 0.3
-        pq = pj * 3
-        pk = pj + 1.0/3.0
+        pk = pj * 3
+        pq = pj + 1.0/3.0
         self.pb = pj
         if self.opponent_card == Q:
             self.pb = pq
@@ -166,7 +183,25 @@ class KuhnPoker(environment.Environment):
         else:
             self.opponent_action = aBet
 
+        self.opponent_init = self.opponent_action
+
         # observation of the agent is a concatenation of opponent_action and agent_card
         # self.observation = self.opponent_action + self.agent_card
-        self.observation = self.agent_card + (oPass if (self.opponent_action == aPass) else oBet)
+        if self.agent_card == J:
+            if self.opponent_action == aPass:
+                self.observation = oPJ
+            else:
+                self.observation = oBJ
+        elif self.agent_card == Q:
+            if self.opponent_action == aPass:
+                self.observation = oPQ
+            else:
+                self.observation = oBQ
+        elif self.agent_card == K:
+            if self.opponent_action == aPass:
+                self.observation = oPK
+            else:
+                self.observation = oBK
+        # self.observation = self.agent_card *10 + (oPass if (self.opponent_action == aPass) else oBet)
+
 # end class
